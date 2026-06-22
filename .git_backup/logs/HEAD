@@ -1,0 +1,11 @@
+0000000000000000000000000000000000000000 cf3b7c2f5be9d3ab3292dda23f56636ac20772a5 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781734761 -0500	commit (initial): scaffold: docverify skeleton + frozen schema
+cf3b7c2f5be9d3ab3292dda23f56636ac20772a5 36a0149fd9cae30c82a3f356783f6f2526b3ae14 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781734808 -0500	commit (amend): scaffold: docverify skeleton + frozen schema
+36a0149fd9cae30c82a3f356783f6f2526b3ae14 51fca351dd6727900f1d55eaca9f10482aa86d41 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781735140 -0500	commit: feat(reporting): per-shipment reports + results.json + correction drafts
+51fca351dd6727900f1d55eaca9f10482aa86d41 3e882269315c83c4d914d8c220147980b05fc6bb Tomas Borja <tborja.ieu2024@student.ie.edu> 1781735276 -0500	commit: feat(ingestion): docx + xlsx normalizer with content-hash doc_id
+3e882269315c83c4d914d8c220147980b05fc6bb 0b6923a0ca6e13790fc14fc66f8111ad20e9c591 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781735379 -0500	commit: feat(verification): cross-field comparison, severity, majority-vote outlier
+0b6923a0ca6e13790fc14fc66f8111ad20e9c591 f875890a8a824c6498aaa5c3002a3d4a1fad8f4c Tomas Borja <tborja.ieu2024@student.ie.edu> 1781736129 -0500	commit: feat(extraction): deterministic synonym extractor + optional Gemini fallback
+f875890a8a824c6498aaa5c3002a3d4a1fad8f4c 04d2547220779a13b898210bc361643a77d692f4 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781736256 -0500	commit: fix(matching): correct _certainty_for_doc call signature (cluster_size param)
+04d2547220779a13b898210bc361643a77d692f4 c52fb5a8d17267332ec42fd32dbf111129763534 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781737637 -0500	commit: chore(security): privacy + secrets audit, SECURITY_AUDIT.md
+c52fb5a8d17267332ec42fd32dbf111129763534 45dae0451048f01290f2205d6c214a8bb4cff927 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781737846 -0500	commit: chore(simplicity): trim bloat + dead code, SIMPLICITY_REVIEW.md
+45dae0451048f01290f2205d6c214a8bb4cff927 7a7b7293d04e6d38525b45e6db80fd18a9622200 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781738332 -0500	commit: test(qa): edge-case + integration coverage, QA_REPORT.md
+7a7b7293d04e6d38525b45e6db80fd18a9622200 5b62cd78f900076b462f4de0b4540c24660709e0 Tomas Borja <tborja.ieu2024@student.ie.edu> 1781738596 -0500	commit: docs(brief): refresh BRIEF.md @ 7a7b729

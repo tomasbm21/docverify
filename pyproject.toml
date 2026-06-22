@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "docverify"
+version = "0.1.0"
+description = "Shipping document cross-reference verification engine"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "python-docx",
+    "openpyxl",
+    "rapidfuzz",
+    "python-dotenv",
+    "requests",
+]
+
+[project.optional-dependencies]
+llm = ["google-generativeai", "anthropic"]
+email = ["resend"]
+web = ["fastapi", "uvicorn"]
+dev = ["pytest"]
+
+[project.scripts]
+docverify = "docverify.pipeline:main"

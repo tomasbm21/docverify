@@ -1,0 +1,13 @@
+# Contract Change Requests
+
+> Append-only log. If you need to change a frozen interface, add an entry here.
+> The Integrator (Agent 06) or a human reconciles these before final integration.
+>
+> Format:
+> ```
+> ## [AGENT X] YYYY-MM-DD
+> - What I need to change: ...
+> - Why the current contract blocks me: ...
+> - Proposed new shape: ...
+> - Who else it affects: ...
+> ```

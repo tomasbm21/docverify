@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocVerify</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="logo">
+        <span>📦</span> DocVerify
+    </div>
+    <div id="status-pill" class="status-pill idle">
+        <span id="status-dot"></span>
+        <span id="status-text">IDLE</span>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab active" data-page="dashboard">Dashboard</button>
+    <button class="tab" data-page="inbox">Inbox</button>
+    <button class="tab" data-page="documents">Documents</button>
+    <button class="tab" data-page="results">Results</button>
+    <button class="tab" data-page="feedback">Feedback</button>
+    <button class="tab" data-page="config">Config & Debug</button>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Content -->
+<div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-groups">—</div>
+                <div class="stat-label">Shipment Groups</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value green" id="stat-passed">—</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value red" id="stat-failed">—</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-accuracy">—</div>
+                <div class="stat-label">Feedback Accuracy</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Quick Actions</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="runPipeline('corpus')">▶ Run Pipeline</button>
+                <button class="btn" onclick="runPipeline('email')">📧 Poll Inbox</button>
+                <button class="btn" onclick="runSimulation()">🤖 Simulate Agents</button>
+                <button class="btn" onclick="refreshAll()">↻ Refresh</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Pipeline Output</div>
+                <button class="btn btn-sm" onclick="refreshLogs()">↻ Refresh</button>
+            </div>
+            <div class="log-output" id="dash-log">No pipeline runs yet. Click "Run Pipeline" to start.</div>
+        </div>
+
+        <div class="card" id="last-run-card" style="display:none">
+            <div class="card-header">
+                <div class="card-title">Last Run Summary</div>
+            </div>
+            <div id="last-run-content"></div>
+        </div>
+    </div>
+
+    <!-- INBOX PAGE -->
+    <div class="page" id="page-inbox">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📧 Email Inbox</div>
+                <button class="btn btn-sm" onclick="refreshInbox()">↻ Refresh</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Attachments</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inbox-table">
+                        <tr><td colspan="5" class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">No emails loaded</div>
+                            <div class="desc">Click "Refresh" to check your inbox</div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOCUMENTS PAGE -->
+    <div class="page" id="page-documents">
+        <div class="form-row" style="gap:24px">
+            <div class="card" style="flex:1">
+                <div class="card-header">
+                    <div class="card-title">📁 Corpus Documents</div>
+                    <button class="btn btn-sm" onclick="refreshDocuments()">↻ Refresh</button>
+                </div>
+                <div id="doc-list">
+                    <div class="empty-state" style="padding:24px">
+                        <div class="icon">📄</div>
+                        <div class="title">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="flex:2" id="doc-viewer-card">
+                <div class="card-header">
+                    <div class="card-title" id="doc-viewer-title">Select a document</div>
+                </div>
+                <div id="doc-viewer">
+                    <div class="empty-state" style="padding:48px">
+                        <div class="icon">👈</div>
+                        <div class="title">Pick a document</div>
+                        <div class="desc">Click a file on the left to view its parsed content</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS PAGE -->
+    <div class="page" id="page-results">
+        <div class="card" id="scorecard-card" style="display:none">
+            <div class="card-header">
+                <div class="card-title">📊 Scorecard</div>
+            </div>
+            <div class="stats-grid" id="scorecard-stats"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Shipment Groups</div>
+                <button class="btn btn-sm" onclick="refreshResults()">↻ Refresh</button>
+            </div>
+            <div id="results-list">
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <div class="title">No results yet</div>
+                    <div class="desc">Run the pipeline to see verification results</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Modal -->
+        <div class="card" id="detail-card" style="display:none">
+            <div class="card-header">
+                <div class="card-title" id="detail-title">Group Detail</div>
+                <button class="btn btn-sm" onclick="closeDetail()">✕ Close</button>
+            </div>
+            <div id="detail-content"></div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK PAGE -->
+    <div class="page" id="page-feedback">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="fb-total">0</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value green" id="fb-confirmed">0</div>
+                <div class="stat-label">Confirmed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value red" id="fb-rejected">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fb-accuracy">—</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Error Rate by Field</div>
+            </div>
+            <div class="bar-chart" id="fb-fields">
+                <div class="empty-state" style="padding:24px">
+                    <div class="desc">No feedback data yet</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Log Feedback</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Shipment ID</label>
+                    <input class="form-input" id="fb-ship-id" placeholder="G01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Field</label>
+                    <input class="form-input" id="fb-field" placeholder="identifiers.order_no">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Verdict</label>
+                    <select class="form-select" id="fb-verdict">
+                        <option value="confirmed">Confirmed ✓</option>
+                        <option value="rejected">Rejected ✗</option>
+                        <option value="corrected">Corrected ✎</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <input class="form-input" id="fb-notes" placeholder="Optional notes...">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Feedback Log</div>
+                <button class="btn btn-sm" onclick="refreshFeedbackLog()">↻ Refresh</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Shipment</th>
+                            <th>Field</th>
+                            <th>Verdict</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fb-log-table">
+                        <tr><td colspan="5" style="color:var(--text-dim);text-align:center;padding:24px">
+                            No feedback entries yet
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIG & DEBUG PAGE -->
+    <div class="page" id="page-config">
+        <div class="form-row">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🧠 LLM Configuration</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">LLM Provider</label>
+                    <select class="form-select" id="cfg-llm-provider">
+                        <option value="ollama">Ollama (Local)</option>
+                        <option value="anthropic">Anthropic Claude</option>
+                        <option value="gemini">Google Gemini</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ollama URL</label>
+                    <input class="form-input" id="cfg-ollama-url" placeholder="http://192.168.1.142:11434">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ollama Model</label>
+                    <input class="form-input" id="cfg-ollama-model" placeholder="llama3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Anthropic API Key</label>
+                    <input class="form-input" id="cfg-anthropic-key" type="password" placeholder="sk-ant-...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gemini API Key</label>
+                    <input class="form-input" id="cfg-gemini-key" type="password" placeholder="AIza...">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveConfig()">Save Config</button>
+                    <button class="btn" onclick="checkOllama()">🔌 Test Ollama</button>
+                </div>
+                <div id="ollama-status" style="margin-top:12px;font-size:13px;color:var(--text-dim)"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📧 Email Configuration</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Resend API Key</label>
+                    <input class="form-input" id="cfg-resend-key" type="password" placeholder="re_...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email From</label>
+                    <input class="form-input" id="cfg-email-from" placeholder="onboarding@resend.dev">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email To</label>
+                    <input class="form-input" id="cfg-email-to" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IMAP Host</label>
+                    <input class="form-input" id="cfg-imap-host" placeholder="imap.gmail.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IMAP User</label>
+                    <input class="form-input" id="cfg-imap-user" placeholder="you@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IMAP Password</label>
+                    <input class="form-input" id="cfg-imap-pass" type="password" placeholder="App password">
+                </div>
+                <button class="btn btn-primary" onclick="saveEmailConfig()">Save Email Config</button>
+                <button class="btn" onclick="testEmail()" style="margin-left:8px">📧 Send Test Email</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🐛 Debug Log</div>
+                <button class="btn btn-sm" onclick="refreshLogs()">↻ Refresh</button>
+            </div>
+            <div class="log-output" id="debug-log">Waiting for pipeline output...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">⚙ Pipeline Settings</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Numeric Tolerance</label>
+                    <input class="form-input" id="cfg-tolerance" type="number" step="0.01" placeholder="0.0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Use LLM</label>
+                    <select class="form-select" id="cfg-use-llm">
+                        <option value="false">No (deterministic only)</option>
+                        <option value="true">Yes (enable LLM fallback)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
