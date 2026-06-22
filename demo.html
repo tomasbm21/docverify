@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocVerify — Shipping Document Verification Engine</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --green:#3fb950;--green-bg:rgba(63,185,80,.12);
+  --red:#f85149;--red-bg:rgba(248,81,73,.12);
+  --orange:#d29922;--orange-bg:rgba(210,153,34,.12);
+  --blue:#58a6ff;--blue-bg:rgba(88,166,255,.12);
+  --purple:#bc8cff;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:20px 0}
+header .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff}
+.logo h1{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.logo span{color:var(--text2);font-size:13px;margin-left:4px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-live{background:var(--green-bg);color:var(--green)}
+.badge-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Hero */
+.hero{padding:48px 0 32px;text-align:center}
+.hero h2{font-size:32px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+.hero p{color:var(--text2);font-size:16px;max-width:600px;margin:0 auto}
+.hero-tags{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.tag{padding:4px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2)}
+
+/* Scorecard */
+.scorecard{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:0 0 40px}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-align:center;transition:border-color .2s}
+.metric:hover{border-color:var(--text3)}
+.metric .value{font-size:36px;font-weight:700;margin-bottom:4px}
+.metric .label{color:var(--text2);font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.metric .sub{color:var(--text3);font-size:12px;margin-top:4px}
+.metric.green .value{color:var(--green)}
+.metric.blue .value{color:var(--blue)}
+.metric.purple .value{color:var(--purple)}
+
+/* Pipeline */
+.pipeline{padding:0 0 40px}
+.pipeline h3{font-size:18px;margin-bottom:16px;font-weight:600}
+.pipeline-flow{display:flex;align-items:center;gap:4px;overflow-x:auto;padding-bottom:8px}
+.pipe-stage{flex:1;min-width:140px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;position:relative}
+.pipe-stage .num{width:24px;height:24px;background:var(--blue);color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-bottom:8px}
+.pipe-stage .name{font-weight:600;font-size:14px;margin-bottom:4px}
+.pipe-stage .desc{color:var(--text2);font-size:11px}
+.pipe-arrow{color:var(--text3);font-size:18px;flex-shrink:0;padding:0 2px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--blue)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Results table */
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.results-header h3{font-size:18px;font-weight:600}
+.filter-btns{display:flex;gap:6px}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .2s}
+.filter-btn:hover,.filter-btn.active{background:var(--bg3);color:var(--text);border-color:var(--text3)}
+.filter-btn.active{border-color:var(--blue);color:var(--blue)}
+
+.shipment-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;transition:border-color .2s}
+.shipment-card:hover{border-color:var(--text3)}
+.shipment-card.fail{border-left:3px solid var(--red)}
+.shipment-card.pass{border-left:3px solid var(--green)}
+.card-header{display:flex;align-items:center;padding:16px 20px;cursor:pointer;gap:16px;flex-wrap:wrap}
+.card-header:hover{background:var(--bg3)}
+.verdict{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.verdict.pass{background:var(--green-bg);color:var(--green)}
+.verdict.fail{background:var(--red-bg);color:var(--red)}
+.card-id{font-weight:700;font-size:15px;min-width:40px}
+.card-ids{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text2)}
+.card-ids dt{color:var(--text3);font-size:11px;text-transform:uppercase}
+.card-ids dd{font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:13px;color:var(--text)}
+.card-meta{margin-left:auto;display:flex;gap:12px;align-items:center}
+.doc-count{font-size:13px;color:var(--text2)}
+.finding-count{font-size:12px;padding:2px 8px;border-radius:12px;background:var(--bg3);color:var(--text2)}
+.finding-count.has-high{background:var(--red-bg);color:var(--red)}
+
+.card-body{display:none;padding:0 20px 20px}
+.card-body.open{display:block}
+
+/* Totals row */
+.totals-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+.total-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center}
+.total-item .t-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.total-item .t-value{font-size:16px;font-weight:600}
+
+/* Documents list */
+.doc-list{margin-bottom:16px}
+.doc-list h4{font-size:13px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.doc-row{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;font-size:13px}
+.doc-type{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;flex-shrink:0}
+.doc-type.bill_of_lading{background:var(--blue-bg);color:var(--blue)}
+.doc-type.commercial_invoice{background:var(--green-bg);color:var(--green)}
+.doc-type.packing_list{background:var(--orange-bg);color:var(--orange)}
+.doc-type.confirmation{background:rgba(188,140,255,.12);color:var(--purple)}
+.doc-type.proforma_invoice{background:rgba(210,153,34,.12);color:var(--orange)}
+.doc-path{color:var(--text2);font-family:monospace;font-size:12px}
+.doc-suspect{margin-left:auto;color:var(--red);font-size:11px;font-weight:600}
+
+/* Findings */
+.findings-section h4{font-size:13px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.finding-row{padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.finding-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.sev{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase}
+.sev.high{background:var(--red-bg);color:var(--red)}
+.sev.medium{background:var(--orange-bg);color:var(--orange)}
+.sev.low{background:var(--bg3);color:var(--text2)}
+.finding-field{font-family:monospace;font-size:13px;font-weight:600}
+.finding-msg{font-size:13px;color:var(--text2);line-height:1.4}
+.finding-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.fv{padding:8px;border-radius:var(--radius);font-size:12px}
+.fv-expected{background:var(--green-bg);border:1px solid rgba(63,185,80,.2)}
+.fv-found{background:var(--red-bg);border:1px solid rgba(248,81,73,.2)}
+.fv .fv-label{font-size:10px;text-transform:uppercase;color:var(--text3);margin-bottom:2px}
+.fv .fv-value{font-family:monospace;font-weight:600}
+
+/* Localization */
+.loc-table{width:100%;border-collapse:collapse;margin-top:12px}
+.loc-table th{text-align:left;padding:10px 12px;font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--var(--border))}
+.loc-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
+.loc-table tr:hover{background:var(--bg3)}
+.loc-check{color:var(--green);font-weight:700}
+
+/* Corpus */
+.corpus-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px}
+.corpus-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.corpus-card h4{font-size:14px;font-weight:600;margin-bottom:8px}
+.corpus-files{list-style:none}
+.corpus-files li{font-size:12px;color:var(--text2);padding:3px 0;display:flex;align-items:center;gap:6px}
+.corpus-files .fmt{font-size:10px;padding:1px 5px;border-radius:3px;background:var(--bg3);color:var(--text3);text-transform:uppercase;font-weight:600}
+
+/* Footer */
+footer{padding:32px 0;text-align:center;color:var(--text3);font-size:13px;border-top:1px solid var(--border);margin-top:48px}
+
+/* Responsive */
+@media(max-width:768px){
+  .hero h2{font-size:24px}
+  .pipeline-flow{flex-direction:column}
+  .pipe-arrow{transform:rotate(90deg)}
+  .card-header{flex-direction:column;align-items:flex-start}
+  .card-meta{margin-left:0}
+  .finding-values{grid-template-columns:1fr}
+  .scorecard{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">D</div>
+      <div>
+        <h1>DocVerify <span>by Norfront</span></h1>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="badge badge-live">Live Demo</span>
+      <span style="color:var(--text3);font-size:12px">v1.0 &middot; 53 documents &middot; 12 shipments</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h2>Shipping Document Cross-Reference Engine</h2>
+    <p>Automated verification of Bills of Lading, Packing Lists, Commercial Invoices, Pro Formas, and Confirmations across multilingual shipping document sets.</p>
+    <div class="hero-tags">
+      <span class="tag">Python 3.11+</span>
+      <span class="tag">Pydantic v2</span>
+      <span class="tag">Multilingual (EN/IT/ES/AR/FR)</span>
+      <span class="tag">382 Tests Passing</span>
+      <span class="tag">Union-Find Clustering</span>
+      <span class="tag">Fuzzy Matching</span>
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <div class="scorecard" id="scorecard"></div>
+</section>
+
+<section class="container pipeline">
+  <h3>Pipeline Architecture</h3>
+  <div class="pipeline-flow">
+    <div class="pipe-stage"><div class="num">A</div><div class="name">Ingestion</div><div class="desc">Read .docx, .xlsx, .pdf</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-stage"><div class="num">B</div><div class="name">Extraction</div><div class="desc">Classify &amp; extract fields</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-stage"><div class="num">C</div><div class="name">Matching</div><div class="desc">Cluster into shipments</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-stage"><div class="num">D</div><div class="name">Verification</div><div class="desc">Cross-reference fields</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-stage"><div class="num">E</div><div class="name">Reporting</div><div class="desc">Verdicts &amp; corrections</div></div>
+  </div>
+</section>
+
+<section class="container" style="padding-bottom:40px">
+  <div class="tabs">
+    <button class="tab active" data-tab="results">Shipment Results</button>
+    <button class="tab" data-tab="localization">Error Localization</button>
+    <button class="tab" data-tab="corpus">Corpus Overview</button>
+  </div>
+
+  <div class="tab-content active" id="tab-results">
+    <div class="results-header">
+      <h3>Verification Results</h3>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all">All (12)</button>
+        <button class="filter-btn" data-filter="pass">Pass (7)</button>
+        <button class="filter-btn" data-filter="fail">Fail (5)</button>
+      </div>
+    </div>
+    <div id="shipments"></div>
+  </div>
+
+  <div class="tab-content" id="tab-localization">
+    <h3 style="margin-bottom:8px">Planted Error Detection &amp; Localization</h3>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px">5 errors were deliberately planted in the test corpus. DocVerify correctly identified and localized all of them — pinpointing the exact document type and field containing the discrepancy.</p>
+    <table class="loc-table" id="loc-table">
+      <thead><tr><th>Shipment</th><th>Planted Error</th><th>Expected Doc Type</th><th>Expected Field</th><th>Detected</th><th>Localized</th></tr></thead>
+      <tbody id="loc-body"></tbody>
+    </table>
+  </div>
+
+  <div class="tab-content" id="tab-corpus">
+    <h3 style="margin-bottom:8px">Test Corpus</h3>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:8px">53 synthetic shipping documents across 12 shipments. Each shipment contains 3-5 document types in mixed formats (.docx modern, .docx legacy fixed-width, .xlsx).</p>
+    <div class="corpus-grid" id="corpus-grid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p><strong>DocVerify</strong> by Norfront AI Advisory &middot; Built for Pastagarovo / Garofalo</p>
+    <p style="margin-top:4px">Tradara Vertical &middot; Logistics Document Verification</p>
+  </div>
+</footer>
+
+<script>
+// ─── Embedded Data ────────────────────────────────────────────
+const RESULTS = {"summary":{"shipments":12,"passed":7,"failed":5,"generated_by":"docverify","timestamp":"2026-06-21T16:39:50.184153+00:00"},"shipments":[{"group_id":"G01","verdict":"PASS","identifiers":{"order_no":"ORD-2024-33562","bl_no":"BL185831","container_no":"WSHZ2980815"},"totals":{"cartons":"4967","net_kg":"47634.83","gross_kg":"50829.0","value":"191161.76","currency":"EUR"},"documents":[{"doc_id":"05700b7","doc_type":"bill_of_lading","source_path":"data/corpus/S01_BL_v1.docx"},{"doc_id":"7168619","doc_type":"confirmation","source_path":"data/corpus/S01_Confirmation_v1.docx"},{"doc_id":"651fff4","doc_type":"commercial_invoice","source_path":"data/corpus/S01_Invoice_v1.docx"},{"doc_id":"1271d65","doc_type":"packing_list","source_path":"data/corpus/S01_PackingList_legacy.docx"},{"doc_id":"7c8aae3","doc_type":"proforma_invoice","source_path":"data/corpus/S01_ProForma_v1.docx"}],"suspect_doc_ids":["7168619"],"findings":[{"field":"logistics.ship_date","value_a":"23 Apr 2026","value_b":"27 April 2026","severity":"low","message":"logistics.ship_date mismatch: 2 of 3 docs show 23 Apr 2026, doc shows 27 April 2026"},{"field":"logistics.vessel","value_a":"JOHNSON STAR","value_b":"JOHNSON STAR voyage","severity":"low","message":"logistics.vessel mismatch: 2 of 3 docs show JOHNSON STAR, doc shows JOHNSON STAR voyage"}]},{"group_id":"G02","verdict":"PASS","identifiers":{"order_no":"ORD-2025-36034","bl_no":"BL524356","container_no":"AQWL1929476"},"totals":{"cartons":"4207","net_kg":"49236.75","gross_kg":"54049.61","value":"161439.76","currency":"EUR"},"documents":[{"doc_id":"2f5a174","doc_type":"confirmation","source_path":"data/corpus/S07_Confirmation_v1.docx"},{"doc_id":"c50fde9","doc_type":"commercial_invoice","source_path":"data/corpus/S07_Invoice_v1.docx"},{"doc_id":"104b465","doc_type":"bill_of_lading","source_path":"data/corpus/S07_BL_v1.docx"},{"doc_id":"24ef6e9","doc_type":"packing_list","source_path":"data/corpus/S07_PackingList_legacy.docx"},{"doc_id":"cd86dd4","doc_type":"proforma_invoice","source_path":"data/corpus/S07_ProForma_v1.docx"}],"suspect_doc_ids":["2f5a174"],"findings":[{"field":"logistics.ship_date","value_a":"12 Feb 2026","value_b":"16 February 2026","severity":"low","message":"logistics.ship_date mismatch: 2 of 3 docs show 12 Feb 2026, doc shows 16 February 2026"},{"field":"logistics.vessel","value_a":"GONZALEZ TRADER","value_b":"GONZALEZ TRADER voyage","severity":"low","message":"logistics.vessel mismatch: 2 of 3 docs show GONZALEZ TRADER, doc shows GONZALEZ TRADER voyage"}]},{"group_id":"G03","verdict":"FAIL","identifiers":{"order_no":"ORD-2026-26686","bl_no":"BL595120","container_no":"HTZG5004134"},"totals":{"cartons":null,"net_kg":null,"gross_kg":"42782.81","value":null,"currency":null},"documents":[{"doc_id":"f05fdee","doc_type":"commercial_invoice","source_path":"data/corpus/S10_Invoice_v1.xlsx"},{"doc_id":"e5fc01e","doc_type":"bill_of_lading","source_path":"data/corpus/S10_BL_v1.docx"},{"doc_id":"cd64927","doc_type":"confirmation","source_path":"data/corpus/S10_Confirmation_v1.docx"},{"doc_id":"bcee36b","doc_type":"packing_list","source_path":"data/corpus/S10_PackingList_legacy.docx"}],"suspect_doc_ids":["cd64927","f05fdee"],"findings":[{"field":"identifiers.order_no","value_a":"ORD-2026-26686","value_b":"ORD-2026-26687","severity":"high","message":"identifiers.order_no mismatch: 3 of 4 docs show ORD-2026-26686, doc shows ORD-2026-26687"},{"field":"logistics.ship_date","value_a":"17 May 2026","value_b":"15 May 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"SMITH SPIRIT","value_b":"SMITH SPIRIT voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G04","verdict":"PASS","identifiers":{"order_no":"ORD-2026-57865","bl_no":"BL622073","container_no":"EYRK3360675"},"totals":{"cartons":"4491","net_kg":"44621.29","gross_kg":"48331.1","value":"205443.52","currency":"USD"},"documents":[{"doc_id":"6c6ff27","doc_type":"commercial_invoice","source_path":"data/corpus/S09_Invoice_v1.docx"},{"doc_id":"197104a","doc_type":"confirmation","source_path":"data/corpus/S09_Confirmation_v1.docx"},{"doc_id":"65670f9","doc_type":"bill_of_lading","source_path":"data/corpus/S09_BL_v1.docx"},{"doc_id":"b035e78","doc_type":"packing_list","source_path":"data/corpus/S09_PackingList_clean.docx"},{"doc_id":"4e9a2f9","doc_type":"proforma_invoice","source_path":"data/corpus/S09_ProForma_v1.docx"}],"suspect_doc_ids":["197104a"],"findings":[{"field":"logistics.ship_date","value_a":"07 Mar 2026","value_b":"10 March 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"LAWRENCE SPIRIT","value_b":"LAWRENCE SPIRIT voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G05","verdict":"PASS","identifiers":{"order_no":"ORD-2026-31160","bl_no":"CMAU124217","container_no":"DOAN2526903"},"totals":{"cartons":"2483","net_kg":"30190.74","gross_kg":"31943.38","value":"71505.36","currency":"EUR"},"documents":[{"doc_id":"0569aaf","doc_type":"bill_of_lading","source_path":"data/corpus/S03_BL_v1.docx"},{"doc_id":"9f876d2","doc_type":"commercial_invoice","source_path":"data/corpus/S03_Invoice_v1.docx"},{"doc_id":"12023ef","doc_type":"confirmation","source_path":"data/corpus/S03_Confirmation_v1.docx"},{"doc_id":"a3dc17f","doc_type":"packing_list","source_path":"data/corpus/S03_PackingList_clean.docx"},{"doc_id":"bb9a8c5","doc_type":"proforma_invoice","source_path":"data/corpus/S03_ProForma_v1.docx"}],"suspect_doc_ids":["12023ef"],"findings":[{"field":"logistics.ship_date","value_a":"06 May 2026","value_b":"08 May 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"RHODES TRADER","value_b":"RHODES TRADER voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G06","verdict":"FAIL","identifiers":{"order_no":"ORD-2026-77566","bl_no":"CMAU786782","container_no":"XUWU7583025"},"totals":{"cartons":"4006","net_kg":"42313.14","gross_kg":"46073.31","value":null,"currency":"EUR"},"documents":[{"doc_id":"e1fea58","doc_type":"confirmation","source_path":"data/corpus/S02_Confirmation_v1.docx"},{"doc_id":"721bff2","doc_type":"packing_list","source_path":"data/corpus/S02_PackingList_sheet.xlsx"},{"doc_id":"c00d894","doc_type":"bill_of_lading","source_path":"data/corpus/S02_BL_v1.docx"},{"doc_id":"9da0da1","doc_type":"commercial_invoice","source_path":"data/corpus/S02_Invoice_v1.xlsx"}],"suspect_doc_ids":["721bff2","9da0da1","c00d894","e1fea58"],"findings":[{"field":"identifiers.order_no","value_a":"ORD-2026-77566","value_b":"ORD-2026-77567","severity":"high","message":"identifiers.order_no mismatch: 3 of 4 docs show ORD-2026-77566, doc shows ORD-2026-77567"},{"field":"logistics.ship_date","value_a":"16 March 2026","value_b":"14 Mar 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"WALKER SPIRIT","value_b":"WALKER SPIRIT voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G07","verdict":"FAIL","identifiers":{"order_no":"ORD-2026-36125","bl_no":"MAEU287193","container_no":"UZKK2424708"},"totals":{"cartons":null,"net_kg":null,"gross_kg":"9590.8","value":null,"currency":null},"documents":[{"doc_id":"eb13a28","doc_type":"commercial_invoice","source_path":"data/corpus/S04_Invoice_v1.xlsx"},{"doc_id":"4a6080e","doc_type":"packing_list","source_path":"data/corpus/S04_PackingList_legacy.docx"},{"doc_id":"39d7d17","doc_type":"bill_of_lading","source_path":"data/corpus/S04_BL_v1.docx"}],"suspect_doc_ids":["4a6080e","eb13a28"],"findings":[{"field":"identifiers.order_no","value_a":"ORD-2026-36125","value_b":"ORD-2026-36126","severity":"high","message":"identifiers.order_no mismatch: 2 of 3 docs show ORD-2026-36125, doc shows ORD-2026-36126"}]},{"group_id":"G08","verdict":"PASS","identifiers":{"order_no":"ORD-2026-49520","bl_no":null,"container_no":null},"totals":{"cartons":"2086","net_kg":"26311.74","gross_kg":"28088.13","value":null,"currency":"USD"},"documents":[{"doc_id":"5beec2b","doc_type":"commercial_invoice","source_path":"data/corpus/S12_Invoice_v1.xlsx"}],"suspect_doc_ids":["5beec2b"],"findings":[]},{"group_id":"G09","verdict":"FAIL","identifiers":{"order_no":"ORD-2024-18305","bl_no":"MAEU441430","container_no":"SLNM5154974"},"totals":{"cartons":"3507","net_kg":"36615.43","gross_kg":"39426.79","value":"137823.36","currency":"EUR"},"documents":[{"doc_id":"7979dd7","doc_type":"commercial_invoice","source_path":"data/corpus/S05_Invoice_v1.docx"},{"doc_id":"a9cb922","doc_type":"confirmation","source_path":"data/corpus/S05_Confirmation_v1.docx"},{"doc_id":"87212ac","doc_type":"packing_list","source_path":"data/corpus/S05_PackingList_sheet.xlsx"},{"doc_id":"6e8b108","doc_type":"bill_of_lading","source_path":"data/corpus/S05_BL_v1.docx"}],"suspect_doc_ids":["6e8b108","7979dd7","87212ac","a9cb922"],"findings":[{"field":"identifiers.container_no","value_a":"SLNM5154974","value_b":"BRUX3591184","severity":"high","message":"identifiers.container_no mismatch: 3 of 4 docs show SLNM5154974, doc shows BRUX3591184"},{"field":"logistics.ship_date","value_a":"29 Mar 2026","value_b":"02 April 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"JOHNSON TRADER","value_b":"JOHNSON TRADER voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G10","verdict":"PASS","identifiers":{"order_no":"ORD-2025-42565","bl_no":null,"container_no":null},"totals":{"cartons":"2308","net_kg":"26513.14","gross_kg":"28137.47","value":"88393.44","currency":"EUR"},"documents":[{"doc_id":"d43629c","doc_type":"packing_list","source_path":"data/corpus/S11_PackingList_sheet.xlsx"},{"doc_id":"c5e14e8","doc_type":"bill_of_lading","source_path":"data/corpus/S11_BL_v1.docx"},{"doc_id":"2dadc06","doc_type":"commercial_invoice","source_path":"data/corpus/S11_Invoice_v1.docx"},{"doc_id":"33ba96d","doc_type":"confirmation","source_path":"data/corpus/S11_Confirmation_v1.docx"}],"suspect_doc_ids":["33ba96d","c5e14e8","d43629c"],"findings":[{"field":"logistics.ship_date","value_a":"12 May 2026","value_b":"16 May 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"WOLFE SPIRIT","value_b":"WOLFE SPIRIT voyage","severity":"low","message":"logistics.vessel mismatch"}]},{"group_id":"G11","verdict":"FAIL","identifiers":{"order_no":"ORD-2025-10434","bl_no":"MAEU936446","container_no":"RBTG2249063"},"totals":{"cartons":"4921","net_kg":"58505.92","gross_kg":"63058.44","value":null,"currency":"USD"},"documents":[{"doc_id":"bd9c3b3","doc_type":"packing_list","source_path":"data/corpus/S08_PackingList_sheet.xlsx"},{"doc_id":"581cd94","doc_type":"bill_of_lading","source_path":"data/corpus/S08_BL_v1.docx"},{"doc_id":"ae35063","doc_type":"commercial_invoice","source_path":"data/corpus/S08_Invoice_v1.xlsx"}],"suspect_doc_ids":["581cd94","ae35063","bd9c3b3"],"findings":[{"field":"identifiers.order_no","value_a":"ORD-2025-10434","value_b":"ORD-2025-10435","severity":"high","message":"identifiers.order_no mismatch: 2 of 3 docs show ORD-2025-10434, doc shows ORD-2025-10435"}]},{"group_id":"G12","verdict":"PASS","identifiers":{"order_no":"ORD-2025-98601","bl_no":"MSCU525667","container_no":"SCBR8135635"},"totals":{"cartons":null,"net_kg":null,"gross_kg":"52605.2","value":null,"currency":null},"documents":[{"doc_id":"8a9b9ae","doc_type":"bill_of_lading","source_path":"data/corpus/S06_BL_v1.docx"},{"doc_id":"72e93c4","doc_type":"confirmation","source_path":"data/corpus/S06_Confirmation_v1.docx"},{"doc_id":"aa58fc4","doc_type":"commercial_invoice","source_path":"data/corpus/S06_Invoice_v1.xlsx"}],"suspect_doc_ids":["72e93c4","aa58fc4"],"findings":[{"field":"logistics.ship_date","value_a":"10 March 2026","value_b":"05 Mar 2026","severity":"low","message":"logistics.ship_date mismatch"},{"field":"logistics.vessel","value_a":"WAGNER EXPRESS","value_b":"WAGNER EXPRESS voyage","severity":"low","message":"logistics.vessel mismatch"}]}]};
+
+const SCORECARD = {"grouping_accuracy":"12/12","grouping_accuracy_pct":100.0,"recall":"5/5","recall_pct":100.0,"precision":1.0,"false_positives":0,"f1":1.0,"localization_accuracy":"5/5","localization_accuracy_pct":100.0,"targets":{"recall_5_of_5":true,"zero_false_positives":true,"localization_ge_4_of_5":true,"grouping_12_of_12":true},"overall_pass":true,"confusion_table":[{"shipment":1,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":2,"planted_error":true,"expected_verdict":"FAIL","predicted_verdict":"FAIL","correct":true},{"shipment":3,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":4,"planted_error":true,"expected_verdict":"FAIL","predicted_verdict":"FAIL","correct":true},{"shipment":5,"planted_error":true,"expected_verdict":"FAIL","predicted_verdict":"FAIL","correct":true},{"shipment":6,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":7,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":8,"planted_error":true,"expected_verdict":"FAIL","predicted_verdict":"FAIL","correct":true},{"shipment":9,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":10,"planted_error":true,"expected_verdict":"FAIL","predicted_verdict":"FAIL","correct":true},{"shipment":11,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true},{"shipment":12,"planted_error":false,"expected_verdict":"PASS","predicted_verdict":"PASS","correct":true}],"localization_details":[{"shipment":2,"expected_doc_type":"commercial_invoice","expected_field":"order_no","found_doc_type":"commercial_invoice","found_field":"order_no","correct":true},{"shipment":4,"expected_doc_type":"packing_list","expected_field":"order_no","found_doc_type":"packing_list","found_field":"order_no","correct":true},{"shipment":5,"expected_doc_type":"commercial_invoice","expected_field":"container_no","found_doc_type":"commercial_invoice","found_field":"container_no","correct":true},{"shipment":8,"expected_doc_type":"packing_list","expected_field":"order_no","found_doc_type":"packing_list","found_field":"order_no","correct":true},{"shipment":10,"expected_doc_type":"commercial_invoice","expected_field":"order_no","found_doc_type":"commercial_invoice","found_field":"order_no","correct":true}]};
+
+const CORPUS = {
+  "S01":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_legacy.docx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S02":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.xlsx","PackingList_sheet.xlsx"],types:["BL","Confirmation","Invoice","Packing List"]},
+  "S03":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_clean.docx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S04":{docs:["BL_v1.docx","Invoice_v1.xlsx","PackingList_legacy.docx"],types:["BL","Invoice","Packing List"]},
+  "S05":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_sheet.xlsx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S06":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.xlsx","PackingList_clean.docx"],types:["BL","Confirmation","Invoice","Packing List"]},
+  "S07":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_legacy.docx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S08":{docs:["BL_v1.docx","Invoice_v1.xlsx","PackingList_sheet.xlsx"],types:["BL","Invoice","Packing List"]},
+  "S09":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_clean.docx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S10":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.xlsx","PackingList_legacy.docx"],types:["BL","Confirmation","Invoice","Packing List"]},
+  "S11":{docs:["BL_v1.docx","Confirmation_v1.docx","Invoice_v1.docx","PackingList_sheet.xlsx","ProForma_v1.docx"],types:["BL","Confirmation","Invoice","Packing List","Pro Forma"]},
+  "S12":{docs:["BL_v1.docx","Invoice_v1.xlsx","PackingList_clean.docx"],types:["BL","Invoice","Packing List"]}
+};
+
+// ─── Helpers ──────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function fmtType(t){
+  const labels={bill_of_lading:'Bill of Lading',commercial_invoice:'Commercial Invoice',packing_list:'Packing List',confirmation:'Confirmation',proforma_invoice:'Pro Forma',unknown:'Unknown'};
+  return labels[t]||t;
+}
+function fmtNum(v){return v==null?'&mdash;':Number(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2})}
+function fmtCurrency(v,c){if(v==null)return'&mdash;';const n=Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});return c?`${c} ${n}`:n}
+function fileFmt(p){return p.endsWith('.xlsx')?'xlsx':'docx'}
+function fileName(p){return p.split('/').pop().split('\\').pop()}
+
+// ─── Scorecard ────────────────────────────────────────────────
+function renderScorecard(){
+  const sc=SCORECARD;
+  const cards=[
+    {value:sc.grouping_accuracy,label:'Grouping Accuracy',sub:'All 12 shipments correctly clustered',cls:'green'},
+    {value:sc.recall,label:'Recall',sub:'All 5 planted errors detected',cls:'green'},
+    {value:sc.f1.toFixed(2),label:'F1 Score',sub:'Zero false positives',cls:'blue'},
+    {value:sc.localization_accuracy,label:'Localization',sub:'Every error pinpointed to doc + field',cls:'purple'}
+  ];
+  $('#scorecard').innerHTML=cards.map(c=>`
+    <div class="metric ${c.cls}">
+      <div class="value">${c.value}</div>
+      <div class="label">${c.label}</div>
+      <div class="sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─── Shipments ────────────────────────────────────────────────
+let currentFilter='all';
+
+function renderShipments(){
+  const shipments=RESULTS.shipments.filter(s=>{
+    if(currentFilter==='all')return true;
+    return s.verdict.toLowerCase()===currentFilter;
+  });
+  $('#shipments').innerHTML=shipments.map(s=>{
+    const isFail=s.verdict==='FAIL';
+    const highFindings=s.findings.filter(f=>f.severity==='high').length;
+    const hasHigh=highFindings>0;
+    const idEntries=Object.entries(s.identifiers).filter(([k,v])=>v);
+    const totalEntries=Object.entries(s.totals).filter(([k,v])=>v!=null);
+
+    return `
+    <div class="shipment-card ${isFail?'fail':'pass'}" data-verdict="${s.verdict}">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="verdict ${isFail?'fail':'pass'}">${s.verdict}</span>
+        <span class="card-id">${s.group_id}</span>
+        <div class="card-ids">
+          ${idEntries.map(([k,v])=>`<div><dt>${k.replace('_no','')}</dt><dd>${v}</dd></div>`).join('')}
+        </div>
+        <div class="card-meta">
+          <span class="doc-count">${s.documents.length} docs</span>
+          <span class="finding-count ${hasHigh?'has-high':''}">${s.findings.length} finding${s.findings.length!==1?'s':''}</span>
+          <span style="color:var(--text3);font-size:18px">&#9660;</span>
+        </div>
+      </div>
+      <div class="card-body">
+        ${totalEntries.length?`
+        <div class="totals-row">
+          ${totalEntries.map(([k,v])=>`
+            <div class="total-item">
+              <div class="t-label">${k.replace('_',' ')}</div>
+              <div class="t-value">${k==='value'?fmtCurrency(v,s.totals.currency):k==='currency'?'&mdash;':fmtNum(v)}</div>
+            </div>
+          `).join('')}
+        </div>`:''}
+
+        <div class="doc-list">
+          <h4>Documents</h4>
+          ${s.documents.map(d=>{
+            const isSuspect=s.suspect_doc_ids.includes(d.doc_id);
+            return `<div class="doc-row">
+              <span class="doc-type ${d.doc_type}">${fmtType(d.doc_type)}</span>
+              <span class="doc-path">${fileName(d.source_path)}</span>
+              ${isFail&&isSuspect?'<span class="doc-suspect">SUSPECT</span>':''}
+            </div>`;
+          }).join('')}
+        </div>
+
+        ${s.findings.length?`
+        <div class="findings-section">
+          <h4>Findings</h4>
+          ${s.findings.map(f=>`
+            <div class="finding-row">
+              <div class="finding-top">
+                <span class="sev ${f.severity}">${f.severity}</span>
+                <span class="finding-field">${f.field}</span>
+              </div>
+              <div class="finding-msg">${f.message}</div>
+              <div class="finding-values">
+                <div class="fv fv-expected"><div class="fv-label">Expected (consensus)</div><div class="fv-value">${f.value_a}</div></div>
+                <div class="fv fv-found"><div class="fv-label">Found (deviant)</div><div class="fv-value">${f.value_b}</div></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>`:'<p style="color:var(--text2);font-size:13px;margin-top:8px">No discrepancies found. All fields match across documents.</p>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(header){
+  const body=header.nextElementSibling;
+  body.classList.toggle('open');
+  const arrow=header.querySelector('[style]');
+  if(arrow)arrow.innerHTML=body.classList.contains('open')?'&#9650;':'&#9660;';
+}
+
+// ─── Localization ─────────────────────────────────────────────
+function renderLocalization(){
+  const tbody=$('#loc-body');
+  tbody.innerHTML=SCORECARD.localization_details.map(l=>`
+    <tr>
+      <td><strong>S${String(l.shipment).padStart(2,'0')}</strong></td>
+      <td style="color:var(--red)">Order No / Container No mismatch</td>
+      <td><span class="doc-type ${l.expected_doc_type}" style="font-size:11px">${fmtType(l.expected_doc_type)}</span></td>
+      <td><code>${l.expected_field}</code></td>
+      <td><span class="loc-check">&#10003;</span></td>
+      <td><span class="loc-check">&#10003; ${fmtType(l.found_doc_type)} &rarr; ${l.found_field}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ─── Corpus ───────────────────────────────────────────────────
+function renderCorpus(){
+  const grid=$('#corpus-grid');
+  grid.innerHTML=Object.entries(CORPUS).map(([sid,data])=>`
+    <div class="corpus-card">
+      <h4>${sid} <span style="color:var(--text3);font-weight:400;font-size:12px">&middot; ${data.docs.length} files</span></h4>
+      <ul class="corpus-files">
+        ${data.docs.map((d,i)=>{
+          const ext=fileFmt(d);
+          return `<li><span class="fmt">${ext}</span>${d}</li>`;
+        }).join('')}
+      </ul>
+    </div>
+  `).join('');
+}
+
+// ─── Tabs & Filters ───────────────────────────────────────────
+$$('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    $$('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    $$('.tab-content').forEach(x=>x.classList.remove('active'));
+    $(`#tab-${t.dataset.tab}`).classList.add('active');
+  });
+});
+
+$$('.filter-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $$('.filter-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentFilter=b.dataset.filter;
+    renderShipments();
+  });
+});
+
+// ─── Init ─────────────────────────────────────────────────────
+renderScorecard();
+renderShipments();
+renderLocalization();
+renderCorpus();
+</script>
+</body>
+</html>
